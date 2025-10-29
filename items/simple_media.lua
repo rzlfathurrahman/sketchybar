@@ -17,6 +17,7 @@ local media = sbar.add("item", "media.spotify", {
       style = settings.font.style_map["Bold"],
       size = 14.0,
     },
+    y_offset = 0,
   },
   label = {
     string = "No Music",
@@ -30,7 +31,7 @@ local media = sbar.add("item", "media.spotify", {
     padding_right = 3,
     width = "dynamic",
     max_chars = 20,
-    y_offset = 4
+    y_offset = 0
   },
   padding_left = 5,
   padding_right = settings.paddings + 6
