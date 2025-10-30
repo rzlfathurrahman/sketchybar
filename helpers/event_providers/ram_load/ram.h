@@ -41,15 +41,15 @@ static inline void ram_update(struct ram* ram) {
     return;
   }
 
-  // Calculate memory usage
+  // Calculate memory usage (macOS style - excluding inactive pages)
   uint64_t free_pages = ram->vm_stat.free_count;
   uint64_t active_pages = ram->vm_stat.active_count;
   uint64_t inactive_pages = ram->vm_stat.inactive_count;
   uint64_t wire_pages = ram->vm_stat.wire_count;
   uint64_t compressed_pages = ram->vm_stat.compressor_page_count;
 
-  ram->free_memory = free_pages * ram->page_size;
-  ram->used_memory = (active_pages + inactive_pages + wire_pages + compressed_pages) * ram->page_size;
+  ram->free_memory = (free_pages + inactive_pages) * ram->page_size;
+  ram->used_memory = (active_pages + wire_pages + compressed_pages) * ram->page_size;
 
   ram->usage_percentage = (double)ram->used_memory / (double)ram->total_memory * 100.0;
 }
