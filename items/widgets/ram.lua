@@ -8,7 +8,7 @@ sbar.exec("killall ram_load >/dev/null; $CONFIG_DIR/helpers/event_providers/ram_
 
 local ram = sbar.add("graph", "widgets.ram" , 42, {
   position = "right",
-  graph = { color = colors.green },
+  graph = { color = colors.nord.aurora.nord14 },
   background = {
     height = 22,
     color = { alpha = 0 },
@@ -58,7 +58,7 @@ end)
 
 -- Background around the ram item
 sbar.add("bracket", "widgets.ram.bracket", { ram.name }, {
-  background = { color = colors.bg1 }
+  background = { color = colors.nord.polar_night.nord1 }
 })
 
 -- Background around the ram item

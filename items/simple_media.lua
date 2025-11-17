@@ -39,9 +39,9 @@ local media = sbar.add("item", "media.spotify", {
 
 -- Function to update media info
 local function update_media_info()
-  sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper.sh get title", function(title)
-    sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper.sh get artist", function(artist)
-      sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper.sh get state", function(state)
+  sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper_v2.sh get title", function(title)
+    sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper_v2.sh get artist", function(artist)
+      sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper_v2.sh get state", function(state)
         if state:match("playing") and title ~= "" then
           local display_text = title
           if artist ~= "" then
@@ -70,14 +70,14 @@ media:set({ script = "echo 'update'", update_freq = 2 })
 -- Click to force immediate update or toggle play/pause
 media:subscribe("mouse.clicked", function(env)
   if env.BUTTON == "right" then
-    sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper.sh togglePlayPause")
+    sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper_v2.sh togglePlayPause")
   end
   update_media_info()
 end)
 
 -- Background around the media item
 sbar.add("bracket", "media.universal.bracket", { media.name }, {
-  background = { color = colors.bg1 }
+  background = { color = colors.nord.polar_night.nord1 }
 })
 
 -- Background around the media item
