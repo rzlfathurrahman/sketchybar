@@ -2,11 +2,15 @@ local icons = require("icons")
 local colors = require("colors")
 local settings = require("settings")
 
+local wifi_interface = (settings.network and settings.network.wifi_interface) or os.getenv("WIFI_INTERFACE") or "en0"
+
 -- Execute the event provider binary which provides the event "network_update"
--- for the network interface "en0", which is fired every 2.0 seconds.
-sbar.exec("killall network_load >/dev/null; $CONFIG_DIR/helpers/event_providers/network_load/bin/network_load en0 network_update 2.0")
+-- for the configured network interface, fired every 2.0 seconds.
+sbar.exec(string.format("killall network_load >/dev/null; $CONFIG_DIR/helpers/event_providers/network_load/bin/network_load %s network_update 2.0", wifi_interface))
 
 local popup_width = 250
+local ssid_placeholder = "ROG UE-5G"
+local ssid_command = string.format([[if [ -x "$CONFIG_DIR/helpers/get_wifi_ssid.sh" ]; then "$CONFIG_DIR/helpers/get_wifi_ssid.sh" %s; else /usr/sbin/ipconfig getsummary %s | awk -F ' SSID : ' '/ SSID : / {print $2}'; fi]], wifi_interface, wifi_interface)
 
 local wifi_up = sbar.add("item", "widgets.wifi1", {
   position = "right",
@@ -174,7 +178,7 @@ wifi_up:subscribe("network_update", function(env)
 end)
 
 wifi:subscribe({"wifi_change", "system_woke"}, function(env)
-  sbar.exec("ipconfig getifaddr en0", function(ip)
+  sbar.exec(string.format("ipconfig getifaddr %s", wifi_interface), function(ip)
     local connected = not (ip == "")
     wifi:set({
       icon = {
@@ -196,11 +200,15 @@ local function toggle_details()
     sbar.exec("networksetup -getcomputername", function(result)
       hostname:set({ label = result })
     end)
-    sbar.exec("ipconfig getifaddr en0", function(result)
+    sbar.exec(string.format("ipconfig getifaddr %s", wifi_interface), function(result)
       ip:set({ label = result })
     end)
-    sbar.exec("ipconfig getsummary en0 | awk -F ' SSID : '  '/ SSID : / {print $2}'", function(result)
-      ssid:set({ label = result })
+    sbar.exec(ssid_command, function(result)
+      local cleaned = result:gsub("^%s+", ""):gsub("%s+$", "")
+      if cleaned == "" then
+        cleaned = ssid_placeholder
+      end
+      ssid:set({ label = cleaned })
     end)
     sbar.exec("networksetup -getinfo Wi-Fi | awk -F 'Subnet mask: ' '/^Subnet mask: / {print $2}'", function(result)
       mask:set({ label = result })

@@ -19,4 +19,7 @@ return {
   --     ["Black"] = "ExtraBold",
   --   },
   -- },
+  network = {
+    wifi_interface = os.getenv("WIFI_INTERFACE") or "en0",
+  },
 }
