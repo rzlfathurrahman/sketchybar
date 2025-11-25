@@ -78,15 +78,47 @@ case "$1" in
         esac
         ;;
     "togglePlayPause"|"toggle")
-        # Simple toggle without checking process existence
-        timeout 3 osascript -e '
-        try
-            tell application "Music" to playpause
-        on error
+        preferred="${2:-auto}"
+        normalized=$(printf "%s" "$preferred" | tr '[:upper:]' '[:lower:]')
+        target_app=""
+
+        case "$normalized" in
+            ""|"auto"|"active")
+                target_app=""
+                ;;
+            "music"|"apple")
+                target_app="Music"
+                ;;
+            "spotify")
+                target_app="Spotify"
+                ;;
+            *)
+                target_app="$preferred"
+                ;;
+        esac
+
+        if [ -n "$target_app" ]; then
+            timeout 3 osascript -e "tell application \"$target_app\" to playpause" 2>/dev/null
+            exit 0
+        fi
+
+        # Determine which app is currently active and toggle that player
+        info=$(get_music_info)
+        active_app=$(printf "%s" "$info" | python3 -c 'import sys, json; data=json.load(sys.stdin); print(data.get("app", ""))' 2>/dev/null)
+
+        if [ "$active_app" = "Music" ] || [ "$active_app" = "Spotify" ]; then
+            timeout 3 osascript -e "tell application \"$active_app\" to playpause" 2>/dev/null
+        else
+            # Fallback to the previous order if we do not know the active player
+            timeout 3 osascript -e '
             try
-                tell application "Spotify" to playpause
-            end try
-        end try' 2>/dev/null
+                tell application "Music" to playpause
+            on error
+                try
+                    tell application "Spotify" to playpause
+                end try
+            end try' 2>/dev/null
+        fi
         ;;
     "next")
         timeout 3 osascript -e '

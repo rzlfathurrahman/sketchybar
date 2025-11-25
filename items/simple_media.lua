@@ -2,6 +2,8 @@ local icons = require("icons")
 local colors = require("colors")
 local settings = require("settings")
 
+local helper_script = os.getenv("HOME") .. "/.config/sketchybar/helpers/music_helper_v2.sh"
+
 local media = sbar.add("item", "media.spotify", {
   position = "right",
   background = {
@@ -34,14 +36,68 @@ local media = sbar.add("item", "media.spotify", {
     y_offset = 0
   },
   padding_left = 5,
-  padding_right = settings.paddings + 6
+  padding_right = settings.paddings + 6,
+  popup = { align = "center" }
 })
+
+local selected_player = "auto"
+local player_choices = {
+  { id = "auto", label = "Active Player" },
+  { id = "Music", label = "Apple Music" },
+  { id = "Spotify", label = "Spotify" },
+}
+
+local player_option_items = {}
+
+local function update_player_option_styles()
+  for _, option in ipairs(player_choices) do
+    local option_item = player_option_items[option.id]
+    if option_item then
+      local is_selected = option.id == selected_player
+      option_item:set({
+        icon = {
+          string = is_selected and "●" or "○",
+          align = "left",
+          width = 16,
+          color = colors.blue,
+        },
+        label = {
+          string = option.label,
+          align = "left",
+          color = is_selected and colors.white or colors.grey,
+        },
+      })
+    end
+  end
+end
+
+local function select_player(option_id)
+  selected_player = option_id
+  update_player_option_styles()
+end
+
+for _, option in ipairs(player_choices) do
+  local option_item = sbar.add("item", "media.player_option." .. option.id, {
+    position = "popup." .. media.name,
+    width = 160,
+    align = "left",
+    padding_left = 8,
+  })
+  player_option_items[option.id] = option_item
+
+  option_item:subscribe("mouse.clicked", function()
+    select_player(option.id)
+    media:set({ popup = { drawing = false } })
+  end)
+end
+
+select_player(selected_player)
 
 -- Function to update media info
 local function update_media_info()
-  sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper_v2.sh get title", function(title)
-    sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper_v2.sh get artist", function(artist)
-      sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper_v2.sh get state", function(state)
+  sbar.exec(helper_script .. " get title", function(title)
+    sbar.exec(helper_script .. " get artist", function(artist)
+      sbar.exec(helper_script .. " get state", function(state)
         if state:match("playing") and title ~= "" then
           local display_text = title
           if artist ~= "" then
@@ -70,9 +126,18 @@ media:set({ script = "echo 'update'", update_freq = 2 })
 -- Click to force immediate update or toggle play/pause
 media:subscribe("mouse.clicked", function(env)
   if env.BUTTON == "right" then
-    sbar.exec("/Users/macbook/.config/sketchybar/helpers/music_helper_v2.sh togglePlayPause")
+    local drawing = media:query().popup.drawing
+    media:set({ popup = { drawing = (drawing == "on") and "off" or "on" } })
+    update_player_option_styles()
+    return
   end
+
+  sbar.exec(helper_script .. " togglePlayPause " .. selected_player)
   update_media_info()
+end)
+
+media:subscribe("mouse.exited.global", function()
+  media:set({ popup = { drawing = false } })
 end)
 
 -- Background around the media item
